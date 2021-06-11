@@ -1,0 +1,182 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(tidyverse)
+library(readr)
+library(datasets)
+library(factoextra)
+library(flexclust)
+library(cluster)
+```
+
+```{r}
+setwd("C:/Users/raley/OneDrive/Escritorio/mineria de datos tareas/actividades mineria/ACT4")
+data <- read.csv("sanguchez.csv", sep=";")
+
+summary(data)
+```
+
+```{r}
+datos <- select(data, nota,Precio)
+datos <- na.omit(datos)
+head(datos)
+```
+
+```{r}
+data_numerica <- datos
+data_numerica$nota <- as.numeric(data_numerica$nota)
+data_numerica$Precio <- parse_number(data_numerica$Precio)
+data_numerica <- na.omit(data_numerica)
+head(data_numerica)
+```
+
+```{r}
+boxplot(data_numerica$Precio, horizontal = TRUE)
+boxplot.stats(data_numerica$Precio)
+```
+
+```{r}
+data_numerica <- filter(data_numerica, Precio < 12.9)
+boxplot(data_numerica$Precio, horizontal = TRUE)
+boxplot.stats(data_numerica$Precio)
+```
+
+```{r}
+data_numerica <- filter(data_numerica, Precio < 10.7)
+boxplot(data_numerica$Precio, horizontal = TRUE)
+boxplot.stats(data_numerica$Precio)
+```
+
+```{r}
+data_numerica <- filter(data_numerica, Precio < 10.5)
+boxplot(data_numerica$Precio, horizontal = TRUE)
+boxplot.stats(data_numerica$Precio)
+```
+```{r}
+data_escalada <- scale(data_numerica) %>% as_tibble()
+data_escalada %>% summary()
+```
+
+```{r}
+SSinterior <- numeric(50)
+for(k in 1:50){
+  modelo <- kmeans(data_escalada, centers = k)
+  SSinterior[k] <- modelo$tot.withinss
+}
+plot(SSinterior)
+```
+
+```{r}
+data_kmeans <- kmeans(data_escalada, centers = 15)
+
+data_escalada$clus <- data_kmeans$cluster %>% as.factor()
+
+ggplot(data_escalada, aes(nota, Precio, color=clus)) + geom_point(alpha=0.5, show.legend = F) + theme_bw()
+```
+
+```{r}
+tempDist <- dist(data_numerica) %>% as.matrix()
+
+index <- sort(data_kmeans$cluster, index.return=TRUE)
+tempDist <- tempDist[index$ix,index$ix]
+rownames(tempDist) <- c(1:nrow(data_numerica))
+colnames(tempDist) <- c(1:nrow(data_numerica))
+
+image(tempDist)
+```
+
+```{r}
+res <- get_clust_tendency(data_numerica, n=30, graph = FALSE)
+
+tempMatrix <- matrix(0, nrow = nrow(data_escalada), ncol = nrow(data_escalada))
+tempMatrix[which(index$x==1), which(index$x==1)]  <- 1
+tempMatrix[which(index$x==2), which(index$x==2)]  <- 1
+tempMatrix[which(index$x==3), which(index$x==3)]  <- 1
+tempMatrix[which(index$x==4), which(index$x==4)]  <- 1
+tempMatrix[which(index$x==5), which(index$x==5)]  <- 1
+tempMatrix[which(index$x==6), which(index$x==6)]  <- 1
+tempMatrix[which(index$x==7), which(index$x==7)]  <- 1
+tempMatrix[which(index$x==8), which(index$x==8)]  <- 1
+tempMatrix[which(index$x==9), which(index$x==9)]  <- 1
+tempMatrix[which(index$x==10), which(index$x==10)] <- 1
+tempMatrix[which(index$x==11), which(index$x==11)] <- 1
+tempMatrix[which(index$x==12), which(index$x==12)] <- 1
+tempMatrix[which(index$x==13), which(index$x==13)] <- 1
+tempMatrix[which(index$x==14), which(index$x==14)] <- 1
+tempMatrix[which(index$x==15), which(index$x==15)] <- 1
+
+tempDist2 <- 1/(1+tempDist)
+cor <- cor(tempMatrix[upper.tri(tempMatrix)],tempDist2[upper.tri(tempDist2)])
+
+print(res)
+print(cor)
+```
+
+```{r}
+data_escalada <- apply(data_escalada,2,as.numeric)
+ 
+#Cohesion
+withinCluster <- numeric(15)
+for (i in 1:15){
+  tempData <- data_escalada[which(data_kmeans$cluster == i),]
+  withinCluster[i] <- sum(dist2(tempData,colMeans(tempData))^2)
+}
+cohesion = sum(withinCluster)
+
+print(c(cohesion, data_kmeans$tot.withinss))
+```
+
+```{r}
+meanData <- colMeans(data_escalada)
+SSB <- numeric(15)
+for (i in 1:15){
+  tempData <- data_escalada[which(data_kmeans$cluster==i),]
+  SSB[i] <- nrow(tempData)*sum((meanData-colMeans(tempData))^2)
+}
+separation = sum(SSB)
+
+print(separation)
+```
+
+```{r}
+coefSil <- silhouette(data_kmeans$cluster,dist(data_escalada))
+summary(coefSil)
+```
+
+```{r}
+fviz_silhouette(coefSil) + coord_flip()
+```
+
+```{r}
+coefSil=numeric(30)
+for (k in 2:30){
+  modelo <- kmeans(data_escalada, centers = k)
+  temp <- silhouette(modelo$cluster,dist(data_escalada))
+  coefSil[k] <- mean(temp[,3])
+}
+tempDF=data.frame(CS=coefSil,K=c(1:30))
+
+ggplot(tempDF, aes(x=K, y=CS)) + 
+  geom_line() +
+  scale_x_continuous(breaks=c(1:30))
+```
+
+```{r}
+data_final <- scale(data_numerica) %>% as_tibble()
+data_final %>% summary()
+
+data_kmeans2 <- kmeans(data_final, centers = 25)
+
+data_final$clus <- data_kmeans2$cluster %>% as.factor()
+
+ggplot(data_final, aes(nota, Precio, color=clus)) + geom_point(alpha=0.5, show.legend = F) + theme_bw()
+```
+
