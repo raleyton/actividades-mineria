@@ -1,0 +1,80 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+```
+
+```{r}
+library(quanteda)
+library(dplyr)
+library(tidyverse)
+library(utf8)
+library(ggplot2)
+```
+
+```{r}
+setwd("C:/Users/raley/OneDrive/Escritorio/mineria de datos tareas/actividades mineria/ACT2")
+data <- read.csv("Primer_Tiempo2020.csv")
+
+head(data)
+```
+
+```{r}
+data <- data[,!(colnames(data) %in% c("id_partido", "fasepartido", "local", "tiempo","formationUsed", "torneo"))]
+data
+```
+
+```{r}
+data1 <- data[order(data$accuratePass, decreasing = TRUE),]
+data1
+```
+
+```{r}
+data1_pases = data1[,colnames(data) %in% c("equipo", "partido", "accuratePass", "totalPass", "precision_pases")]
+data1_pases = data1_pases[order(data1_pases$precision_pases, decreasing = TRUE),]
+
+data1_pases
+```
+
+```{r}
+data1_tiros <- NULL
+
+data1_tiros = data1[,colnames(data) %in% c("equipo", "partido", "goals", "ontargetScoringAtt", "totalScoringAtt", "blockedScoringAtt", "shotOffTarget", "precision_tiros")]
+data1_tiros = data1_tiros[order(data1_tiros$goals, decreasing = TRUE),]
+data1_tiros
+```
+
+```{r}
+Everton <- filter(data, equipo == "Everton")
+Everton_tiros <- filter(data1_tiros, equipo == "Everton")
+Everton_pases <- filter(data1_pases, equipo == "Everton")
+```
+
+```{r}
+Everton_pases <- Everton_pases[,!(colnames(Everton_pases) %in% c("equipo"))] 
+
+Promedios_Pas <- c("Promedio Pases",mean(Everton_pases$accuratePass),mean(Everton_pases$totalPass),mean(Everton_pases$precision_pases))
+Everton_pases <- rbind(Everton_pases, Promedios_Pas)
+
+Max_Pas <- c("Max Pases",max(Everton_pases$accuratePass),max(Everton_pases$totalPass),max(Everton_pases$precision_pases))
+Everton_pases <- rbind(Everton_pases, Max_Pas)
+
+Min_Pas <- c("Min Pases",min(Everton_pases$accuratePass),min(Everton_pases$totalPass),min(Everton_pases$precision_pases))
+Everton_pases <- rbind(Everton_pases, Min_Pas)
+
+Everton_pases
+```
+
+```{r}
+pases_graf <- Everton$accuratePass
+Everton2 <- Everton[order(Everton$accuratePass, decreasing = FALSE),]
+dotchart(Everton$totalPass, labels = utf8_encode(Everton$partido), cex=0.5, xlab = "Pases", ylab = "Partido")
+```
+
+```{r}
+tiros_graf <- Everton$precision_tiros
+Everton2 <- Everton[order(Everton$precision_tiros, decreasing = FALSE),]
+dotchart(Everton$totalScoringAtt, labels = utf8_encode(Everton$partido), cex=0.5, xlab = "Pases", ylab = "Partido")
+```
