@@ -1,0 +1,77 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(datasets)
+library(dplyr)
+```
+
+```{r}
+setwd("C:/Users/raley/OneDrive/Escritorio/mineria de datos tareas/actividades mineria/ACT3")
+data <- read.csv("pokemon.csv")
+
+head(data)
+```
+
+```{r}
+datos <- filter(data, Legendary == "False")
+datos <- select(datos, Name, Type.1, Type.2, HP, Attack)
+```
+
+```{r}
+datos <- filter(datos, Type.1 == "Psychic" | Type.2 == "Psychic")
+```
+
+```{r}
+attach(datos)
+boxplot(HP, horizontal = TRUE)
+boxplot.stats(HP)
+boxplot(Attack, horizontal = TRUE)
+boxplot.stats(Attack)
+```
+
+```{r}
+attach(datos)
+datos <- filter(datos, HP < 120 & Attack < 135)
+attach(datos)
+boxplot(HP, horizontal = TRUE)
+boxplot.stats(HP)
+boxplot(Attack, horizontal = TRUE)
+boxplot.stats(Attack)
+```
+
+```{r}
+attach(datos)
+datos <- filter(datos, HP < 110)
+attach(datos)
+boxplot(HP, horizontal = TRUE)
+boxplot.stats(HP)
+boxplot(Attack, horizontal = TRUE)
+boxplot.stats(Attack)
+```
+
+```{r}
+attach(datos)
+datos <- filter(datos, HP > 20)
+attach(datos)
+boxplot(HP, horizontal = TRUE)
+boxplot.stats(HP)
+boxplot(Attack, horizontal = TRUE)
+boxplot.stats(Attack)
+```
+
+```{r}
+attach(datos)
+datos <- filter(datos, HP > 25)
+attach(datos)
+boxplot(HP, horizontal = TRUE)
+boxplot.stats(HP)
+boxplot(Attack, horizontal = TRUE)
+boxplot.stats(Attack)
+```
